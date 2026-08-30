@@ -1,0 +1,40 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# --- Node / Next ---
+node_modules/
+.next/
+out/
+npm-debug.log*
+.turbo/
+
+# --- Ortam ---
+.env
+*.local
+
+# --- Uygulama verisi (çalışma zamanında üretilir) ---
+veri/
+modeller/*.pt
+backend/ornek_veri/*/
+backend/ornek_veri/*.png
+# Depoda tutulan küçük vitrin örnekleri (hızlı demo için) hariç:
+!backend/ornek_veri/vitrin/
+!backend/ornek_veri/vitrin/*.png
+!backend/ornek_veri/vitrin/*.jpg
+*.db
+*.sqlite3
+
+# --- OS / editör ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# --- Ekran görüntüleri hariç: docs/ekran-goruntuleri korunur ---
+!docs/ekran-goruntuleri/

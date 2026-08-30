@@ -1,0 +1,55 @@
+# BioMine Vision — tek komutla tüm sistem:  docker compose up --build
+# Servisler: backend (FastAPI + PyTorch/Omnipose), frontend (Next.js), db (PostgreSQL, opsiyonel)
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: biomine
+      POSTGRES_PASSWORD: biomine
+      POSTGRES_DB: biomine
+    volumes:
+      - db_verisi:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biomine"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      # PostgreSQL kullanmak için aşağıyı açın; kapalıyken SQLite dosyası kullanılır.
+      DATABASE_URL: postgresql+psycopg2://biomine:biomine@db:5432/biomine
+      CORS_ORIGINS: http://localhost:3000
+      CIHAZ: otomatik
+      OMNIPOSE_MODEL: bact_phase_omni
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - veri:/veri
+      - modeller:/modeller
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/saglik"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_verisi:
+  veri:
+  modeller:

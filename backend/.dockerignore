@@ -1,0 +1,12 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+ornek_veri/*/
+!ornek_veri/vitrin/
+veri/
+*.db
+*.sqlite3
+.git/
