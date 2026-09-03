@@ -78,11 +78,14 @@ tekrarlanabilir ve **açıklanabilir** biçimde analiz eder.
 - ⏱️ Video / zaman-sıralı görüntülerde hücre sayısı ve yoğunluk değişimi takibi
 
 ### 🧬 Bakteriyel CRISPR-Cas analizi
+- **Tek veya birden çok** (2–8) FASTA / GenBank / GFF genom
 - En yakın **tür ve suş** (genom benzerliği / ANI)
-- **CRISPR dizilerini** ve tekrar/aralayıcı yapılarını çıkarır
+- **CRISPR dizilerini** ve tekrar/aralayıcı yapılarını çıkarır (ileri + ters şerit)
 - **Cas gen adaylarını** ve mümkünse **CRISPR-Cas tipini** belirler
 - **Aralayıcı (spacer) sayılarını** ve tekrar konsensüsünü gösterir
-- **Genom haritası** ve ayrıntılı **CRISPR lokus haritası** üretir
+- Çoklu genomda **pyGenomeViz karşılaştırmalı sinteni haritası** (gen okları +
+  kimliğe göre renklendirilmiş bağlantılar + ölçek çubuğu + etkileşimli HTML)
+- Tek genomda **genom haritası** + ayrıntılı **CRISPR lokus haritası**
 - Sonuç: PNG, PDF, HTML, CSV, JSON
 
 ### 🎯 Hücre takibi (cell tracking)
@@ -122,29 +125,107 @@ tekrarlanabilir ve **açıklanabilir** biçimde analiz eder.
 | Hücre takibi (kareler arası eşleme) | **Trackastra** — transformer tabanlı hücre takip modeli (opsiyonel) | Kuruluysa `general_2d` pretrained ağırlıkları ile; değilse yerleşik **IoU + Macar algoritması (scipy)** eşleyicisine düşülür. |
 | CRISPR-Cas alt tip tahmini | **CRISPRCasTyper** (XGBoost tabanlı tekrar sınıflandırıcı + HMM profilleri) — opsiyonel | Kuruluysa Cas gen operonu ve alt tip; değilse yerleşik **CRT tarzı tekrar/aralayıcı bulucu** çalışır. |
 | En yakın tür/suş | **skani** (sketch tabanlı hızlı ANI) — opsiyonel | Paketlenmiş referans genom kümesine karşı ortalama nükleotid kimliği (ANI). |
+| Karşılaştırmalı genom sinteni | **pyGenomeViz** + **MMseqs2** (GenBank: protein RBH) / **MUMmer** (FASTA: nükleotid) — opsiyonel | Çoklu genom yüklendiğinde her genom bir parça, gen okları ve kimliğe göre renklendirilmiş bağlantılarla sinteni figürü + etkileşimli HTML. |
 
-> Not: Omnipose, Trackastra, CRISPRCasTyper ve skani **opsiyoneldir**. Hiçbiri
-> kurulu olmasa bile BioMine Vision tüm akışları yerleşik yöntemlerle çalıştırır.
+> Not: Omnipose, Trackastra, CRISPRCasTyper, skani ve MMseqs2/MUMmer
+> **opsiyoneldir**. Hiçbiri kurulu olmasa bile BioMine Vision tüm akışları yerleşik
+> yöntemlerle çalıştırır (çoklu genom bu durumda bağlantısız çizilir).
 
 ---
 
 ## Ekran görüntüleri
 
-> Tümü gerçek çalışan uygulamadan alınmıştır.
-
-| | |
-|---|---|
-| ![Panel](docs/ekran-goruntuleri/01-panel.jpg) | ![Tekli analiz](docs/ekran-goruntuleri/02-tekli-analiz-sonuc.jpg) |
-| Panel | Tekli görüntü analizi — sonuç |
-| ![İşaretli + Grad-CAM](docs/ekran-goruntuleri/03-isaretli-ve-gradcam.jpg) | ![Video zaman serisi](docs/ekran-goruntuleri/05-video-zaman-serisi.jpg) |
-| İşaretlenmiş görüntü + Grad-CAM | Video / zaman serisi |
-| ![CRISPR-Cas](docs/ekran-goruntuleri/11-crispr-cas.jpg) | ![Hücre takibi](docs/ekran-goruntuleri/12-hucre-takibi.jpg) |
-| Bakteriyel CRISPR-Cas analizi | Hücre takibi |
-| ![Toplu analiz](docs/ekran-goruntuleri/04-toplu-analiz.jpg) | ![Yönetim](docs/ekran-goruntuleri/09-yonetim-esikler.jpg) |
-| Toplu (ZIP) analiz | Yönetim — kural motoru eşikleri |
+> Tümü gerçek çalışan uygulamadan alınmıştır (`frontend/scripts/ekran-goruntusu.mjs`).
 
 ### Kısa demo
 ![Demo](docs/ekran-goruntuleri/demo.gif)
+
+Dosya yüklemeden rapor indirmeye kadar tipik bir akış: panel → tekli analiz →
+katmanlar → geçmiş → yönetim.
+
+---
+
+### 1 · Panel (dashboard)
+![Panel](docs/ekran-goruntuleri/01-panel.jpg)
+
+Son analizler, bugünkü toplam analiz sayısı, tespit edilen toplam hücre, ortalama
+güven oranı, Normal/Dikkat/Kritik dağılımı, son yedi günlük hücre sayısı grafiği
+ve “Yeni Analiz” birincil aksiyonu. Yorumlama servisinin durumu (kurallı/çevrimiçi)
+sağ üstte gösterilir.
+
+---
+
+### 2 · Tekli görüntü analizi — sonuç ekranı
+![Tekli analiz sonucu](docs/ekran-goruntuleri/02-tekli-analiz-sonuc.jpg)
+
+Orijinal görüntü, renkli segmentasyon ve Grad-CAM ısı haritası yan yana; tahmin
+edilen sınıf + güven, ilk 5 olası sonuç, morfolojik ölçümler (hücre sayısı, kaplama
+oranı, ortalama alan/uzunluk/genişlik, baskın morfoloji), sistem uyarıları, risk
+seviyesi ve sade Türkçe açıklama. PDF/CSV/JSON indirme aynı ekranda.
+
+---
+
+### 3 · İşaretlenmiş görüntü + Grad-CAM (yakın plan)
+![İşaretli ve Grad-CAM](docs/ekran-goruntuleri/03-isaretli-ve-gradcam.jpg)
+
+Her bakterinin çevresi kendi renginde çizilir ve numaralandırılır; Grad-CAM
+katmanı modelin sınıflandırma kararında ağırlık verdiği bölgeleri gösterir.
+
+---
+
+### 4 · Toplu (ZIP) analiz
+![Toplu analiz](docs/ekran-goruntuleri/04-toplu-analiz.jpg)
+
+Bir ZIP içindeki tüm görüntüler sırayla analiz edilir; özet, kare kare gezinme ve
+toplu PDF/CSV/JSON raporu. ZIP güvenli açılır, dosya sayısı/boyutu sınırlıdır.
+
+---
+
+### 5 · Video / zaman serisi
+![Video zaman serisi](docs/ekran-goruntuleri/05-video-zaman-serisi.jpg)
+
+Video kareleri seçilen sn aralığıyla örneklenir. Kare başına hücre sayısı ve
+kaplama oranı çizgi grafiği, “bakteriyel aktivite kaybı” gibi seri uyarıları ve
+kare kare sonuç gezintisi.
+
+---
+
+### 6 · Bakteriyel CRISPR-Cas analizi
+![CRISPR-Cas analizi](docs/ekran-goruntuleri/11-crispr-cas.jpg)
+
+Bir veya birden çok FASTA/GenBank/GFF genom yüklenir. Birden çok genomda
+**pyGenomeViz karşılaştırmalı sinteni haritası** üretilir: her genom bir parça,
+turuncu gen okları, kimliğe göre renklendirilmiş (gri→kırmızı) bağlantılar, ölçek
+çubuğu ve etkileşimli HTML çıktısı. Tek genomda en yakın tür/suş (ANI), CRISPR
+dizileri + aralayıcı sayıları, Cas gen adayları, CRISPR-Cas tipi ve ayrıntılı
+CRISPR lokus haritası gösterilir. Çıktı PNG, PDF, HTML, CSV, JSON.
+
+---
+
+### 7 · Hücre takibi (cell tracking)
+![Hücre takibi](docs/ekran-goruntuleri/12-hucre-takibi.jpg)
+
+Zaman serisi görüntüde her kare segmentlenir, hücreler kareler arasında eşlenir,
+kalıcı iz kimlikleri atanır. İz kaplamalı animasyon, kare başına iz sayısı grafiği
+(bölünme anları işaretli), iz uzunluğu histogramı, en uzun izler tablosu ve
+doğum/ölüm/bölünme olayları. Çıktı MP4/GIF, PNG, CSV, JSON.
+
+---
+
+### 8 · Yönetim — kural motoru eşikleri
+![Yönetim](docs/ekran-goruntuleri/09-yonetim-esikler.jpg)
+
+Düşük güven, aşırı yoğunluk, hücre bulunamadı, hızlı popülasyon düşüşü, bulanıklık,
+karanlık görüntü, karışık morfoloji eşikleri; maksimum yükleme boyutu ve video kare
+aralığı. Her değişiklik veritabanına yazılır ve bir sonraki analizde etkilidir.
+Varsayılanlara dönüş seçeneği vardır.
+
+---
+
+### 9 · Analiz geçmişi ve numune karşılaştırma
+| ![Geçmiş](docs/ekran-goruntuleri/06-gecmis.jpg) | ![Karşılaştırma](docs/ekran-goruntuleri/08-karsilastirma.jpg) |
+|---|---|
+| Tüm analizler, riskli filtresi, önizleme, silme | İki numunenin görüntü, segmentasyon, hücre sayısı, kaplama, morfoloji ve güven farkları |
 
 ---
 
@@ -196,7 +277,7 @@ reloop-ai-biomine-vision/
 │   │   └── utils/  loglama.py  dosya.py
 │   ├── scripts/  kurulum.sh  ornek_veri_uret.py  model_egit.py
 │   │             ornek_genom_uret.py  ornek_takip_uret.py  demo.py
-│   ├── tests/                  # 36 test (pytest)
+│   ├── tests/                  # 37 test (pytest)
 │   └── ornek_veri/
 │       ├── vitrin/             # hızlı-demo mikroskop görüntüleri
 │       ├── genom/              # örnek bakteriyel genom + skani referansları
@@ -314,6 +395,40 @@ curl -X POST http://localhost:8000/api/takip/analiz -F "dosya=@zaman_serisi.zip"
 
 ---
 
+## Örnek veriler ve test kaynakları
+
+Her özellik için arayüzde **“Örnek …”** düğmeleri vardır (tek tıkla çalışır).
+Kendiniz denemek isterseniz aşağıdaki dosyaları kullanabilirsiniz. Örnek veriler
+`scripts/kurulum.sh` ile otomatik üretilir/indirilir; küçük olanları depoda hazır gelir.
+
+| Özellik | Depodaki örnek dosya | Kaynak / nasıl üretilir | Kendi verinizle deneme |
+|---|---|---|---|
+| **Tekli / toplu görüntü analizi** | `backend/ornek_veri/vitrin/*.jpg` (8 sınıf) | `python scripts/ornek_veri_uret.py` — sentetik faz-kontrast benzeri görüntüler | Herhangi bir JPG/PNG/TIFF mikroskop görüntüsü; toplu için bunları bir `.zip` yapın |
+| **Video / zaman serisi** | `backend/ornek_veri/takip/takip_demo.mp4` | `python scripts/ornek_takip_uret.py` — 24 kareli sentetik time-lapse | Kendi MP4/AVI mikroskop videonuz |
+| **CRISPR-Cas — tek genom** | `backend/ornek_veri/genom/ornek_bakteri.fasta` (gömülü 28 bp tekrar, ~18 aralayıcı) + `genom/referans/*.fasta` (skani için) | `python scripts/ornek_genom_uret.py` — sentetik | NCBI’den bir bakteri genomu (FASTA/GenBank), ör. `datasets download genome accession GCF_000005845.2` (E. coli K-12) |
+| **CRISPR-Cas — karşılaştırmalı** | `backend/ornek_veri/genom/faj/NC_07091{4,5,6,8}.gbk` (4 Yersinia faj) | pyGenomeViz örnek veri kümesi <https://github.com/moshi4/pygenomeviz-data-v1> (NCBI RefSeq, kamuya açık) | 2–8 adet FASTA **veya** GenBank genom dosyasını birlikte yükleyin |
+| **Hücre takibi** | `backend/ornek_veri/takip/takip_demo_kareler.zip` (24 kare) | `python scripts/ornek_takip_uret.py` | Kare görüntülerini içeren `.zip`, çok sayfalı `.tif` yığını veya MP4/AVI |
+
+**Gerçek genom verisi indirmek için** (NCBI Datasets CLI):
+
+```bash
+# E. coli K-12 (bakteriyel, CRISPR-Cas içerir)
+datasets download genome accession GCF_000005845.2 --include genome
+# Birden çok genomu karşılaştırma için:
+datasets download genome accession GCF_000005845.2,GCF_000008865.2 --include genome,gbff
+```
+
+pyGenomeViz’in tüm örnek veri kümeleri Python’dan da alınabilir:
+
+```python
+from pygenomeviz.utils import load_example_genbank_dataset
+files = load_example_genbank_dataset("enterobacteria_phage")  # ya da "yersinia_phage", "escherichia_coli", "saccharomyces" ...
+```
+
+`docs/demo-senaryosu.md` her akış için adım adım beklenen çıktıyı listeler.
+
+---
+
 ## Görüntü analizi hattı
 
 `backend/app/core/hat.py` — tek görüntü için:
@@ -345,14 +460,23 @@ curl -X POST http://localhost:8000/api/takip/analiz -F "dosya=@zaman_serisi.zip"
    yakınlık (≤ 20 kb). `cctyper` kuruluysa gerçek Cas operonu ve alt tip.
 4. **En yakın tür/suş** — `skani` + paketlenmiş referans genom kümesiyle ANI.
    (Üretimde GTDB temsili genomlarıyla çalıştırın.)
-5. **Görselleştirme** — `pyGenomeViz` ile genom haritası (CRISPR + Cas), ayrıntılı
-   CRISPR lokus şeması (tekrarlar ve numaralı aralayıcılar).
-6. **Çıktı** — PNG (harita), PDF (özet + haritalar), HTML (tablo raporu),
+5. **Karşılaştırmalı sinteni (çoklu genom)** — `pyGenomeViz` ile her genom bir
+   parça; gen okları GenBank açıklamasından (yoksa `prodigal`); genomlar arası
+   bağlantılar `MMseqs2` (GenBank, protein RBH) ya da `MUMmer` (FASTA, nükleotid)
+   ile hesaplanır ve kimliğe göre gri→kırmızı renklendirilir. Ölçek çubuğu +
+   etkileşimli HTML üretilir. Aligner yoksa harita bağlantısız çizilir.
+6. **Tek genom haritası** — `pyGenomeViz` genom haritası (CRISPR + genler) +
+   ayrıntılı CRISPR lokus şeması (tekrarlar ve numaralı aralayıcılar).
+7. **Çıktı** — PNG (harita), PDF (özet + haritalar), HTML (tablo + etkileşimli),
    CSV (aralayıcı tablosu), JSON (tam sonuç).
 
-Örnek genom (`backend/ornek_veri/genom/ornek_bakteri.fasta`): sentetik bir kontig
-+ gömülü kanonik CRISPR dizisi (28 bp tekrar, ~18 aralayıcı) + Cas benzeri ORF'ler.
-Ekranda **"Örnek veri"** etiketiyle sunulur.
+**Örnekler** (arayüzde iki düğme):
+- *4 faj karşılaştırması* — `backend/ornek_veri/genom/faj/NC_07091{4,5,6,8}.gbk`
+  (pyGenomeViz Yersinia faj veri kümesi; NCBI RefSeq). Sonuç: repo örneğinin
+  aynısı olan çoklu-track sinteni figürü.
+- *CRISPR'lı genom* — `backend/ornek_veri/genom/ornek_bakteri.fasta`: sentetik
+  kontig + gömülü kanonik CRISPR dizisi (28 bp tekrar, ~18 aralayıcı) + Cas benzeri
+  ORF'ler + `genom/referans/*.fasta` (skani tür ataması için).
 
 ---
 
@@ -440,7 +564,7 @@ teknik temelidir. (Bkz. [Yol haritası](#yol-haritası).)
 
 ```bash
 cd backend && source .venv/bin/activate
-python -m pytest -q          # 36 test: ön işleme, segmentasyon, morfoloji,
+python -m pytest -q          # 37 test: ön işleme, segmentasyon, morfoloji,
                              # kural motoru, sınıflandırıcı, Grad-CAM, API,
                              # CRISPR-Cas (CRT bulucu, uçtan uca), hücre takibi
 ```

@@ -63,13 +63,38 @@ def test_genom_analiz_uctan_uca(tmp_path):
     yol = _crispr_fasta(tmp_path, aralayici=16)
     d = G.genom_analiz(yol, dosya_adi="crispr.fasta")
     assert d["kontig_sayisi"] == 1
+    assert d["genom_sayisi"] == 1
+    assert d["karsilastirmali"] is False
     assert d["toplam_aralayici"] >= 12
     assert d["yontem_crispr"] in {"yerlesik-crt", "cctyper"}
     assert d["crispr_cas_tipi"]
     assert d["aciklama"]
-    # üretilen dosyalar
+    assert len(d["genomlar"]) == 1
+    assert d["genomlar"][0]["gen_kaynagi"] in {"prodigal", "genbank", "yok"}
     for anahtar in ("html_rapor", "pdf_rapor", "csv_rapor", "json_rapor"):
         assert d.get(anahtar), f"{anahtar} üretilmedi"
+
+
+def test_coklu_genom_karsilastirma(tmp_path):
+    """Birden çok genom -> karşılaştırmalı pyGenomeViz haritası."""
+    y1 = _crispr_fasta(tmp_path, aralayici=12)
+    # ikinci genom: birincinin hafifçe mutasyona uğramış hâli
+    rng = random.Random(3)
+    s = "".join(l for l in y1.read_text().splitlines() if not l.startswith(">"))
+    ch = list(s)
+    for i in range(0, len(ch), 40):
+        ch[i] = rng.choice("ACGT")
+    y2 = tmp_path / "crispr2.fasta"
+    y2.write_text(">test_kontig2\n" + "".join(ch) + "\n")
+
+    d = G.genom_analiz([y1, y2], dosya_adi="2 genom")
+    assert d["genom_sayisi"] == 2
+    assert d["karsilastirmali"] is True
+    assert len(d["genomlar"]) == 2
+    assert d["genom_haritasi"], "karşılaştırma haritası üretilmedi"
+    # mmseqs kuruluysa sinteni bağlantıları olmalı
+    if G._arac_var("mmseqs"):
+        assert d["hizalama_sayisi"] >= 1
 
 
 def test_ornek_genom_varsa_calisir():

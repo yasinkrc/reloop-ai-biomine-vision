@@ -79,11 +79,35 @@ def yaz_fasta(yol: Path, baslik: str, dizi: str) -> None:
             f.write(dizi[i:i + 70] + "\n")
 
 
+def _faj_ornekleri_indir() -> None:
+    """pyGenomeViz'in Yersinia faj örnek veri kümesini (4 GenBank) faj/ altına kopyalar.
+
+    Bu genomlar NCBI RefSeq'ten kamuya açıktır; pyGenomeViz
+    https://github.com/moshi4/pygenomeviz-data-v1 üzerinden dağıtır.
+    """
+    hedef = CIKTI / "faj"
+    hedef.mkdir(parents=True, exist_ok=True)
+    if len(list(hedef.glob("*.gb*"))) >= 4:
+        print(f"Faj örnekleri zaten var: {hedef}")
+        return
+    try:
+        from pygenomeviz.utils import load_example_genbank_dataset
+        import shutil
+
+        for f in load_example_genbank_dataset("yersinia_phage"):
+            shutil.copy(f, hedef / f.name)
+        print(f"Faj örnekleri: {hedef} (4 GenBank, ~340 KB)")
+    except Exception as e:
+        print(f"!! Faj örnekleri indirilemedi ({e}). "
+              f"Karşılaştırmalı örnek çalışmayabilir; internet gerektirir.")
+
+
 def main() -> None:
     rng = random.Random(2026)
     genom = genom_kur(rng)
     yaz_fasta(CIKTI / "ornek_bakteri.fasta",
               "ornek_bakteri_kontig1 sentetik CRISPR demo genomu", genom)
+    _faj_ornekleri_indir()
 
     # skani referansları
     yaz_fasta(REF / "Pseudomonas_biomine_A.fasta", "ref_A yakin", mutasyona_ugrat(genom, 0.008, rng))

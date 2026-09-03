@@ -85,10 +85,16 @@ export const api = {
   genomAnaliz: (form: FormData) =>
     istek<GenomSonuc>("/api/genom/analiz", { method: "POST", body: form }),
   genomOrnek: () => istek<GenomSonuc>("/api/genom/ornek", { method: "POST" }),
+  genomOrnekCrispr: () =>
+    istek<GenomSonuc>("/api/genom/ornek-crispr", { method: "POST" }),
   genomDurum: () =>
-    istek<{ cctyper: boolean; skani: boolean; prodigal: boolean; referans_genom_sayisi: number }>(
-      "/api/genom/durum",
-    ),
+    istek<{
+      cctyper: boolean;
+      skani: boolean;
+      prodigal: boolean;
+      mmseqs: boolean;
+      referans_genom_sayisi: number;
+    }>("/api/genom/durum"),
 
   // --- Hücre takibi ---
   takipAnaliz: (form: FormData) =>

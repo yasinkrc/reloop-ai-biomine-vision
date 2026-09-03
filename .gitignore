@@ -27,11 +27,13 @@ backend/ornek_veri/*.png
 !backend/ornek_veri/vitrin/
 !backend/ornek_veri/vitrin/*.png
 !backend/ornek_veri/vitrin/*.jpg
-# Örnek genom + skani referansları:
+# Örnek genom + skani referansları + karşılaştırmalı faj kümesi:
 !backend/ornek_veri/genom/
 !backend/ornek_veri/genom/*.fasta
 !backend/ornek_veri/genom/referans/
 !backend/ornek_veri/genom/referans/*.fasta
+!backend/ornek_veri/genom/faj/
+!backend/ornek_veri/genom/faj/*.gbk
 # Örnek zaman serisi (kare JPEG'leri + mp4 + zip):
 !backend/ornek_veri/takip/
 !backend/ornek_veri/takip/kare_*.jpg

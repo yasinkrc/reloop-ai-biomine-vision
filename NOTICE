@@ -69,8 +69,17 @@ paketteki sentetik örnek veriyle eğitir (scripts/model_egit.py).
   Lisans: MIT. Opsiyonel; genom benzerliği (ANI) ile en yakın tür/suş ataması
   için CLI olarak çağrılır.
 - pyGenomeViz — https://github.com/moshi4/pyGenomeViz
-  Lisans: MIT. Genom ve CRISPR lokus haritalarının çizimi için kütüphane olarak
-  kullanılır.
+  Lisans: MIT. Genom / CRISPR lokus haritaları ve çoklu-genom karşılaştırmalı
+  sinteni figürleri için kütüphane olarak kullanılır.
+  Örnek veri: `backend/ornek_veri/genom/faj/NC_07091{4,5,6,8}.gbk` dosyaları
+  pyGenomeViz'in Yersinia faj örnek veri kümesinden alınmıştır
+  (https://github.com/moshi4/pygenomeviz-data-v1); kaynağı NCBI RefSeq'tir ve
+  kamuya açıktır.
+- MMseqs2 — https://github.com/soedinglab/MMseqs2 · Lisans: GPLv3.
+  Opsiyonel; GenBank girdilerde karşılaştırmalı sinteni (protein RBH) için CLI
+  olarak çağrılır.
+- MUMmer4 — https://github.com/mummer4/mummer · Lisans: Artistic License 2.0.
+  Opsiyonel; FASTA girdilerde nükleotid sinteni için CLI olarak çağrılır.
 - Biopython — https://github.com/biopython/biopython
   Lisans: Biopython License Agreement (BSD benzeri). FASTA/GenBank/GFF ayrıştırma.
 - Trackastra — https://github.com/weigertlab/trackastra

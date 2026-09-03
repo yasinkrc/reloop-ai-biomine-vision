@@ -169,6 +169,31 @@ export interface GenomSonuc {
   json_rapor: string | null;
   aciklama: string;
   uyarilar: string[];
+  // Çoklu genom
+  genom_sayisi: number;
+  karsilastirmali: boolean;
+  hizalama_sayisi: number;
+  karsilastirma_html: string | null;
+  genomlar: GenomOzet[];
+}
+
+export interface GenomOzet {
+  ad: string;
+  kontig_sayisi: number;
+  toplam_uzunluk: number;
+  gc_yuzdesi: number;
+  gen_sayisi: number;
+  gen_kaynagi: string;
+  crispr_dizisi: number;
+  toplam_aralayici: number;
+  cas_gen_adayi: number;
+  tur_eslesmesi: {
+    tur: string;
+    ani_yuzdesi: number;
+    hizalanan_kesir: number;
+    referans: string;
+  } | null;
+  diziler: CrisprDizisi[];
 }
 
 // --- Hücre takibi ---

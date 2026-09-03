@@ -50,6 +50,9 @@ pytest==8.3.4
 httpx==0.28.1
 
 # --- Opsiyonel harici ikili araçlar (pip değil) ---
-#   brew install skani hmmer prodigal libomp     (macOS)
-#   apt install skani hmmer prodigal             (Debian/Ubuntu)
-# skani: genom benzerliği (ANI) ile en yakın tür/suş.  Yoksa tür ataması atlanır.
+#   brew install skani hmmer prodigal mmseqs2 mummer libomp   (macOS)
+#   apt  install skani hmmer prodigal mmseqs2 mummer           (Debian/Ubuntu)
+# skani  : genom benzerliği (ANI) ile en yakın tür/suş (yoksa tür ataması atlanır)
+# mmseqs : GenBank girdilerde karşılaştırmalı sinteni (protein RBH)
+# mummer : FASTA girdilerde karşılaştırmalı sinteni (nükleotid, nucmer)
+# hmmer + prodigal : CRISPRCasTyper (cctyper) için gereklidir
