@@ -74,10 +74,37 @@
 Tüm eşikler `/api/ayarlar` (Yönetim ekranı) üzerinden değiştirilebilir ve
 `ayar` tablosunda kalıcıdır.
 
+## CRISPR-Cas analizi (`backend/app/core/genom.py`)
+
+Uç nokta: `POST /api/genom/analiz` · `POST /api/genom/ornek`
+
+1. **Dizi okuma** — Biopython ile FASTA / GenBank / GFF ayrıştırma.
+2. **CRISPR bulma** — yerleşik CRT tarzı bulucu: kesin tohum eşleşmesi + esnek
+   uzatma; 20–48 bp tekrar, 20–100 bp aralayıcı; ileri + ters şerit; çakışma
+   birleştirme. `cctyper` kuruluysa Cas operonu + alt tip için de çağrılır.
+3. **Cas adayları** — `prodigal` ORF çağrısı + CRISPR lokuslarına yakınlık.
+4. **Tür/suş** — `skani` + paketlenmiş referans genomlarla ANI.
+5. **Görselleştirme** — `pyGenomeViz` genom haritası + CRISPR lokus şeması.
+6. **Çıktı** — PNG, PDF, HTML, CSV (aralayıcılar), JSON.
+
+Bu modül mevcut görüntü analizi hattına dokunmaz; tamamen eklemedir.
+
+## Hücre takibi (`backend/app/core/takip.py`)
+
+Uç nokta: `POST /api/takip/analiz` · `POST /api/takip/ornek`
+
+1. **Kare çıkarma** — MP4/AVI, çok sayfalı TIFF veya sıralı kare ZIP.
+2. **Segmentasyon** — her kare mevcut `segmentasyon` modülüyle.
+3. **Eşleme** — `trackastra` kuruluysa transformer modeli; değilse yerleşik
+   IoU + merkez uzaklığı + alan tutarlılığı maliyetiyle Macar algoritması (scipy).
+4. **Bölünme çıkarımı** — doğum anında ~28 px yakındaki mevcut izle ebeveyn bağı.
+5. **Çıktı** — kaplamalı GIF/MP4, kaplamalı kareler, sayım grafiği, CSV (izler),
+   JSON (soyağacı).
+
 ## Teknoloji
 
 - **Backend:** Python 3.11, FastAPI, SQLAlchemy, Uvicorn
-- **Yapay zeka:** PyTorch 2.5 + torchvision, Omnipose (opsiyonel), OpenCV, scikit-image
+- **Yapay zeka:** PyTorch + torchvision (EfficientNetV2, Grad-CAM), Omnipose / Trackastra / CRISPRCasTyper / skani (hepsi opsiyonel, yerleşik yedekli), OpenCV, scikit-image, Biopython, pyGenomeViz
 - **Frontend:** Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, Recharts
 - **Veritabanı:** SQLite (ön tanımlı) veya PostgreSQL
 - **Paketleme:** Docker + Docker Compose (backend + frontend + db)

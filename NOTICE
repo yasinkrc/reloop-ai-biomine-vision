@@ -59,7 +59,28 @@ edilmemiştir ve dağıtılmamaktadır. BioMine Vision, kendi DEMO modelini
 paketteki sentetik örnek veriyle eğitir (scripts/model_egit.py).
 
 
-3) Diğer başlıca bağımlılıklar
+3) CRISPR-Cas ve genom analizi bileşenleri
+-----------------------------------------
+- CRISPRCasTyper (cctyper) — https://github.com/Russel88/CRISPRCasTyper
+  Lisans: MIT. Opsiyonel bağımlılık; Cas gen tiplemesi için CLI olarak çağrılır,
+  kaynak kodu kopyalanmamıştır. Kurulu değilse yerleşik CRT tarzı CRISPR bulucu
+  kullanılır (app/core/genom.py).
+- skani — https://github.com/bluenote-1577/skani
+  Lisans: MIT. Opsiyonel; genom benzerliği (ANI) ile en yakın tür/suş ataması
+  için CLI olarak çağrılır.
+- pyGenomeViz — https://github.com/moshi4/pyGenomeViz
+  Lisans: MIT. Genom ve CRISPR lokus haritalarının çizimi için kütüphane olarak
+  kullanılır.
+- Biopython — https://github.com/biopython/biopython
+  Lisans: Biopython License Agreement (BSD benzeri). FASTA/GenBank/GFF ayrıştırma.
+- Trackastra — https://github.com/weigertlab/trackastra
+  Lisans: BSD-3-Clause. Opsiyonel; transformer tabanlı hücre takibi için kütüphane
+  olarak kullanılır. Kurulu değilse yerleşik IoU + Macar algoritması takibi
+  kullanılır (app/core/takip.py).
+- HMMER, Prodigal — cctyper'ın ikili bağımlılıkları (opsiyonel), sistemden çağrılır.
+
+
+4) Diğer başlıca bağımlılıklar
 ------------------------------
 - PyTorch / torchvision — BSD-3-Clause
 - FastAPI — MIT
@@ -68,6 +89,7 @@ paketteki sentetik örnek veriyle eğitir (scripts/model_egit.py).
 - OpenCV (opencv-python-headless) — Apache-2.0
 - scikit-image — BSD-3-Clause
 - NumPy / SciPy — BSD-3-Clause
+- matplotlib — Matplotlib License (BSD uyumlu)
 - ReportLab — BSD
 - Next.js — MIT
 - React — MIT

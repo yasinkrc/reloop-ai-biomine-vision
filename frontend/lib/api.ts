@@ -2,7 +2,9 @@ import type {
   AnalizSonuc,
   AyarKaydi,
   GecmisKaydi,
+  GenomSonuc,
   Saglik,
+  TakipSonuc,
   TopluSonuc,
   VideoSonuc,
 } from "./tipler";
@@ -78,6 +80,21 @@ export const api = {
     istek<{ siniflar: { anahtar: string; etiket: string }[]; not: string }>(
       "/api/ayarlar/siniflar",
     ),
+
+  // --- CRISPR-Cas / genom ---
+  genomAnaliz: (form: FormData) =>
+    istek<GenomSonuc>("/api/genom/analiz", { method: "POST", body: form }),
+  genomOrnek: () => istek<GenomSonuc>("/api/genom/ornek", { method: "POST" }),
+  genomDurum: () =>
+    istek<{ cctyper: boolean; skani: boolean; prodigal: boolean; referans_genom_sayisi: number }>(
+      "/api/genom/durum",
+    ),
+
+  // --- Hücre takibi ---
+  takipAnaliz: (form: FormData) =>
+    istek<TakipSonuc>("/api/takip/analiz", { method: "POST", body: form }),
+  takipOrnek: () => istek<TakipSonuc>("/api/takip/ornek", { method: "POST" }),
+  takipDurum: () => istek<{ trackastra: boolean }>("/api/takip/durum"),
 
   disariAktarUrl: `${TABAN}/api/disari-aktar`,
 };

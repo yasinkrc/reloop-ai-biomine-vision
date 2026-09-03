@@ -12,7 +12,9 @@ from app.api import (
     ayar_yollari,
     disari_aktar_yollari,
     gecmis_yollari,
+    genom_yollari,
     karsilastir_yollari,
+    takip_yollari,
 )
 from app.config import ayarlari_al
 from app.database import veritabanini_hazirla
@@ -60,6 +62,8 @@ app.include_router(gecmis_yollari.router)
 app.include_router(karsilastir_yollari.router)
 app.include_router(ayar_yollari.router)
 app.include_router(disari_aktar_yollari.router)
+app.include_router(genom_yollari.router)
+app.include_router(takip_yollari.router)
 
 
 @app.get("/api/saglik", tags=["sistem"])

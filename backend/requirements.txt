@@ -28,6 +28,19 @@ torchvision==0.20.1
 # watershed tabanlı segmentasyona düşer ve çalışmaya devam eder.
 # omnipose==1.0.6
 
+# --- Genom / CRISPR-Cas analizi + grafikler ---
+biopython==1.88
+matplotlib==3.11.1
+pygenomeviz==1.7.0
+# CRISPRCasTyper — Cas gen tiplemesi (opsiyonel). Kurulu değilse sistem
+# yerleşik CRT tarzı CRISPR bulucuya düşer. HMM veritabanı + hmmer/prodigal gerekir.
+# cctyper==1.8.0
+
+# --- Hücre takibi ---
+# trackastra — transformer tabanlı hücre takibi (opsiyonel). Kurulu değilse
+# sistem yerleşik IoU + Macar algoritması takibine düşer.
+# trackastra==0.3.0
+
 # --- Raporlama / dışa aktarma ---
 reportlab==4.2.5
 pandas==2.2.3
@@ -35,3 +48,8 @@ pandas==2.2.3
 # --- Test ---
 pytest==8.3.4
 httpx==0.28.1
+
+# --- Opsiyonel harici ikili araçlar (pip değil) ---
+#   brew install skani hmmer prodigal libomp     (macOS)
+#   apt install skani hmmer prodigal             (Debian/Ubuntu)
+# skani: genom benzerliği (ANI) ile en yakın tür/suş.  Yoksa tür ataması atlanır.

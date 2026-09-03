@@ -23,10 +23,20 @@ veri/
 modeller/*.pt
 backend/ornek_veri/*/
 backend/ornek_veri/*.png
-# Depoda tutulan küçük vitrin örnekleri (hızlı demo için) hariç:
+# Depoda tutulan küçük demo örnekleri (hızlı demo için) hariç:
 !backend/ornek_veri/vitrin/
 !backend/ornek_veri/vitrin/*.png
 !backend/ornek_veri/vitrin/*.jpg
+# Örnek genom + skani referansları:
+!backend/ornek_veri/genom/
+!backend/ornek_veri/genom/*.fasta
+!backend/ornek_veri/genom/referans/
+!backend/ornek_veri/genom/referans/*.fasta
+# Örnek zaman serisi (kare JPEG'leri + mp4 + zip):
+!backend/ornek_veri/takip/
+!backend/ornek_veri/takip/kare_*.jpg
+!backend/ornek_veri/takip/takip_demo.mp4
+!backend/ornek_veri/takip/takip_demo_kareler.zip
 *.db
 *.sqlite3
 

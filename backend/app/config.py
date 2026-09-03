@@ -49,10 +49,11 @@ class Esikler(BaseSettings):
     aktivite_kaybi_dusus_orani: float = 0.35
 
     # Görüntü kalitesi: Laplacian varyansı bunun altındaysa görüntü
-    # bulanık kabul edilir.
-    bulaniklik_esik: float = 80.0
+    # bulanık kabul edilir. (Gerçek mikroskop görüntüleri sıklıkla 40-120
+    # aralığındadır; eşik yönetim ekranından değiştirilebilir.)
+    bulaniklik_esik: float = 35.0
     # Ortalama parlaklık (0-255) bunun altındaysa görüntü karanlık kabul edilir.
-    karanlik_esik: float = 35.0
+    karanlik_esik: float = 22.0
 
     # Risk seviyesi haritalaması için: kaç uyarı "Kritik" sayılır.
     kritik_uyari_sayisi: int = 2

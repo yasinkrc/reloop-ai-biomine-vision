@@ -111,7 +111,9 @@ def uret(sinif: str, rng: random.Random) -> np.ndarray:
     else:
         raise ValueError(f"Bilinmeyen sınıf: {sinif}")
 
-    img = cv2.GaussianBlur(img, (3, 3), 0)
+    # Çok hafif yumuşatma — gerçek faz-kontrast dokusu; bulanıklık uyarısını tetiklemez.
+    img = cv2.GaussianBlur(img, (3, 3), 0.6)
+    img = cv2.addWeighted(img, 1.35, cv2.GaussianBlur(img, (0, 0), 3), -0.35, 0)  # unsharp
     return img
 
 

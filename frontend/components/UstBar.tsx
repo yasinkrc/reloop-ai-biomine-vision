@@ -12,6 +12,8 @@ const BAGLANTILAR = [
   { yol: "/analiz", ad: "Tekli Analiz" },
   { yol: "/toplu", ad: "Toplu Analiz" },
   { yol: "/video", ad: "Video / Zaman Serisi" },
+  { yol: "/crispr", ad: "CRISPR-Cas" },
+  { yol: "/takip", ad: "Hücre Takibi" },
   { yol: "/gecmis", ad: "Geçmiş" },
   { yol: "/karsilastir", ad: "Karşılaştır" },
   { yol: "/ayarlar", ad: "Yönetim" },

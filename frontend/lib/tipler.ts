@@ -120,3 +120,100 @@ export interface Saglik {
   segmentasyon_yontemi: string;
   desteklenen_sinif_sayisi: number;
 }
+
+// --- CRISPR-Cas / genom ---
+export interface CrisprDizisi {
+  kontig: string;
+  baslangic: number;
+  bitis: number;
+  tekrar_uzunlugu: number;
+  tekrar_konsensus: string;
+  tekrar_sayisi: number;
+  aralayici_sayisi: number;
+  aralayicilar: string[];
+  ortalama_aralayici_uzunlugu: number;
+  tekrar_kimlik_yuzdesi: number;
+}
+
+export interface CasGeni {
+  kontig: string;
+  baslangic: number;
+  bitis: number;
+  yon: string;
+  ad: string;
+  kaynak: string;
+}
+
+export interface GenomSonuc {
+  dosya_adi: string;
+  kontig_sayisi: number;
+  toplam_uzunluk: number;
+  gc_yuzdesi: number;
+  yontem_crispr: string;
+  yontem_tur: string;
+  crispr_cas_tipi: string;
+  toplam_aralayici: number;
+  diziler: CrisprDizisi[];
+  cas_genleri: CasGeni[];
+  tur_eslesmesi: {
+    tur: string;
+    ani_yuzdesi: number;
+    hizalanan_kesir: number;
+    referans: string;
+  } | null;
+  genom_haritasi: string | null;
+  lokus_haritasi: string | null;
+  html_rapor: string | null;
+  pdf_rapor: string | null;
+  csv_rapor: string | null;
+  json_rapor: string | null;
+  aciklama: string;
+  uyarilar: string[];
+}
+
+// --- Hücre takibi ---
+export interface TakipZamanNoktasi {
+  kare: number;
+  zaman_sn: number;
+  hucre_sayisi: number;
+  aktif_iz: number;
+}
+
+export interface Iz {
+  id: number;
+  parent_id: number | null;
+  baslangic_kare: number;
+  bitis_kare: number;
+  sure_kare: number;
+  noktalar: { kare: number; zaman_sn: number; x: number; y: number; alan: number }[];
+}
+
+export interface Bolunme {
+  kare: number;
+  zaman_sn: number;
+  parent: number;
+  cocuklar: number[];
+}
+
+export interface TakipSonuc {
+  dosya_adi: string;
+  kare_sayisi: number;
+  kare_araligi_sn: number;
+  yontem: string;
+  iz_sayisi: number;
+  ham_iz_parcasi: number;
+  uzun_iz_sayisi: number;
+  bolunme_sayisi: number;
+  ilk_kare_hucre: number;
+  son_kare_hucre: number;
+  kaplama_kareler: string[];
+  kaplama_video: string | null;
+  kaplama_gif: string | null;
+  grafik: string | null;
+  zaman_serisi: TakipZamanNoktasi[];
+  izler: Iz[];
+  bolunmeler: Bolunme[];
+  aciklama: string;
+  csv_rapor: string | null;
+  json_rapor: string | null;
+}

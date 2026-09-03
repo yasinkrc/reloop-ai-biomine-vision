@@ -47,6 +47,20 @@ if [ "$EGIT_MODEL" = "1" ]; then
   python scripts/model_egit.py --epok 6 --dondur --boyut 224
 fi
 
+echo "==> Örnek genom + zaman serisi (CRISPR-Cas ve Hücre Takibi demoları)"
+python scripts/ornek_genom_uret.py || echo "!! örnek genom üretilemedi"
+python scripts/ornek_takip_uret.py || echo "!! örnek zaman serisi üretilemedi"
+
+# Opsiyonel: genom benzerliği için skani (yoksa tür ataması atlanır)
+if [ "${KUR_SKANI:-0}" = "1" ] && command -v brew >/dev/null 2>&1; then
+  echo "==> skani / hmmer / prodigal kuruluyor (opsiyonel)"
+  brew install skani hmmer prodigal libomp || echo "!! bio araçları kurulamadı"
+fi
+# Opsiyonel: gelişmiş Cas tiplemesi / transformer takibi
+if [ "${KUR_BIO_ILERI:-0}" = "1" ]; then
+  pip install cctyper trackastra || echo "!! cctyper/trackastra kurulamadı"
+fi
+
 echo "==> Veritabanı hazırlanıyor"
 python -c "from app.database import veritabanini_hazirla; veritabanini_hazirla(); print('veritabanı hazır')"
 

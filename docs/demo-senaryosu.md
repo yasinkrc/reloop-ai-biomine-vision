@@ -72,6 +72,8 @@ PY
 | Örnek "Çubuk — yoğun" tıkla | `/analiz` | 3 görsel + tahmin + ilk-5 + morfoloji + açıklama |
 | ZIP yükle | `/toplu` | özet + kare kare gezinme + PDF/CSV/JSON indir |
 | MP4 yükle | `/video` | çizgi grafiği + seri uyarısı + kare seçici |
+| "Örnek genom ile dene" | `/crispr` | tür/suş + CRISPR dizileri + aralayıcı sayısı + genom & lokus haritası + PDF/CSV/JSON/HTML |
+| "Örnek zaman serisi ile dene" | `/takip` | iz kaplamalı animasyon + sayım grafiği + bölünme olayları + iz tablosu + CSV/JSON |
 | Listeyi gör | `/gecmis` | tüm analizler, riskli filtresi, sil |
 | İki analiz seç | `/karsilastir` | farklar tablosu + yorum |
 | Eşik değiştir | `/ayarlar` | değer kaydedilir, sonraki analizde etkili |
