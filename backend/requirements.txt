@@ -32,6 +32,7 @@ torchvision==0.20.1
 biopython==1.88
 matplotlib==3.11.1
 pygenomeviz==1.7.0
+pycirclize==1.10.1   # dairesel (Circos tarzı) genom haritaları
 # CRISPRCasTyper — Cas gen tiplemesi (opsiyonel). Kurulu değilse sistem
 # yerleşik CRT tarzı CRISPR bulucuya düşer. HMM veritabanı + hmmer/prodigal gerekir.
 # cctyper==1.8.0

@@ -125,11 +125,13 @@ tekrarlanabilir ve **açıklanabilir** biçimde analiz eder.
 | Hücre takibi (kareler arası eşleme) | **Trackastra** — transformer tabanlı hücre takip modeli (opsiyonel) | Kuruluysa `general_2d` pretrained ağırlıkları ile; değilse yerleşik **IoU + Macar algoritması (scipy)** eşleyicisine düşülür. |
 | CRISPR-Cas alt tip tahmini | **CRISPRCasTyper** (XGBoost tabanlı tekrar sınıflandırıcı + HMM profilleri) — opsiyonel | Kuruluysa Cas gen operonu ve alt tip; değilse yerleşik **CRT tarzı tekrar/aralayıcı bulucu** çalışır. |
 | En yakın tür/suş | **skani** (sketch tabanlı hızlı ANI) — opsiyonel | Paketlenmiş referans genom kümesine karşı ortalama nükleotid kimliği (ANI). |
-| Karşılaştırmalı genom sinteni | **pyGenomeViz** + **MMseqs2** (GenBank: protein RBH) / **MUMmer** (FASTA: nükleotid) — opsiyonel | Çoklu genom yüklendiğinde her genom bir parça, gen okları ve kimliğe göre renklendirilmiş bağlantılarla sinteni figürü + etkileşimli HTML. |
+| Doğrusal genom / karşılaştırmalı sinteni | **pyGenomeViz** + **MMseqs2** (GenBank: protein RBH) / **MUMmer** (FASTA: nükleotid) | Tekli doğrusal (gen adı etiketli, seçilebilir ok stili, çok-kontig), çoklu karşılaştırmalı sinteni (kimliğe göre renk, ölçek/renk çubuğu), etkileşimli HTML. MMseqs2/MUMmer opsiyonel — yoksa bağlantısız çizilir. |
+| Dairesel (Circos) genom haritası | **pyCirclize** | Dış eksen, ileri/geri CDS halkaları, CRISPR lokusları, GC içeriği ve GC eğriliği halkaları. |
 
-> Not: Omnipose, Trackastra, CRISPRCasTyper, skani ve MMseqs2/MUMmer
+> Not: Omnipose, Trackastra, CRISPRCasTyper, skani, MMseqs2/MUMmer ve pyCirclize
 > **opsiyoneldir**. Hiçbiri kurulu olmasa bile BioMine Vision tüm akışları yerleşik
-> yöntemlerle çalıştırır (çoklu genom bu durumda bağlantısız çizilir).
+> yöntemlerle çalıştırır (çoklu genom bu durumda bağlantısız çizilir, dairesel
+> harita atlanır).
 
 ---
 
@@ -190,19 +192,44 @@ kare kare sonuç gezintisi.
 
 ---
 
-### 6 · Bakteriyel CRISPR-Cas analizi
+### 6 · Bakteriyel CRISPR-Cas analizi — karşılaştırmalı sinteni
 ![CRISPR-Cas analizi](docs/ekran-goruntuleri/11-crispr-cas.jpg)
 
-Bir veya birden çok FASTA/GenBank/GFF genom yüklenir. Birden çok genomda
-**pyGenomeViz karşılaştırmalı sinteni haritası** üretilir: her genom bir parça,
-turuncu gen okları, kimliğe göre renklendirilmiş (gri→kırmızı) bağlantılar, ölçek
-çubuğu ve etkileşimli HTML çıktısı. Tek genomda en yakın tür/suş (ANI), CRISPR
-dizileri + aralayıcı sayıları, Cas gen adayları, CRISPR-Cas tipi ve ayrıntılı
-CRISPR lokus haritası gösterilir. Çıktı PNG, PDF, HTML, CSV, JSON.
+Bir veya birden çok (2–8) FASTA/GenBank/GFF genom yüklenir. Sağdaki
+**“Görselleştirme ayarları”** paneli pyGenomeViz’in web uygulamasındaki
+seçeneklerin aynısını sunar: **harita tipi** (otomatik / karşılaştırmalı doğrusal
+/ tekli doğrusal / dairesel / hepsi), **gen oku stili** (arrow · bigarrow · box ·
+bigbox · rbox · bigrbox), **gen adı etiketi** (yok / sadece üst şerit / tüm
+şeritler), **sinteni bağlantı rengi** (gri→kırmızı · turuncu→yeşil · mavi→kırmızı)
+ve **en düşük bağlantı kimliği** (%). Birden çok genomda pyGenomeViz
+**karşılaştırmalı sinteni haritası** çizilir: her genom bir şerit, gen okları,
+kimliğe göre renklendirilmiş bağlantılar, ölçek çubuğu, renk çubuğu ve etkileşimli
+HTML. Bağlantılar `MMseqs2` (GenBank, protein RBH) veya `MUMmer` (FASTA,
+nükleotid) ile hesaplanır.
 
 ---
 
-### 7 · Hücre takibi (cell tracking)
+### 7 · CRISPR-Cas — tekli doğrusal + dairesel (Circos) harita
+![Genom haritaları](docs/ekran-goruntuleri/13-genom-dairesel.jpg)
+
+Tek genomda üç harita birden üretilir:
+- **Tekli doğrusal** (pyGenomeViz): GenBank açıklamasından gen adı etiketli gen
+  okları (yoksa `prodigal` ORF’leri), CRISPR dizileri ve Cas gen adayları işaretli,
+  çok-kontiglı (draft) genom desteği.
+- **Dairesel / Circos** (pyCirclize): dış eksen (kb/Mb), ileri CDS halkası, geri
+  CDS halkası, CRISPR lokusları, **GC içeriği** halkası (ortalamanın üstü/altı) ve
+  **GC eğriliği** (GC skew) halkası — replikasyon orijini/terminusu için tipik
+  desen.
+- **CRISPR lokus haritası**: tekrarlar (mavi) ve numaralı aralayıcılar; tekrar
+  konsensüsü.
+
+Ayrıca: en yakın tür/suş (ANI, `skani`), CRISPR-Cas tipi (`cctyper` varsa),
+aralayıcı tablosu. Çıktı: PNG (ana/doğrusal/dairesel), PDF, HTML (tablo +
+etkileşimli sinteni), CSV, JSON.
+
+---
+
+### 8 · Hücre takibi (cell tracking)
 ![Hücre takibi](docs/ekran-goruntuleri/12-hucre-takibi.jpg)
 
 Zaman serisi görüntüde her kare segmentlenir, hücreler kareler arasında eşlenir,
@@ -212,7 +239,7 @@ doğum/ölüm/bölünme olayları. Çıktı MP4/GIF, PNG, CSV, JSON.
 
 ---
 
-### 8 · Yönetim — kural motoru eşikleri
+### 9 · Yönetim — kural motoru eşikleri
 ![Yönetim](docs/ekran-goruntuleri/09-yonetim-esikler.jpg)
 
 Düşük güven, aşırı yoğunluk, hücre bulunamadı, hızlı popülasyon düşüşü, bulanıklık,
@@ -222,7 +249,7 @@ Varsayılanlara dönüş seçeneği vardır.
 
 ---
 
-### 9 · Analiz geçmişi ve numune karşılaştırma
+### 10 · Analiz geçmişi ve numune karşılaştırma
 | ![Geçmiş](docs/ekran-goruntuleri/06-gecmis.jpg) | ![Karşılaştırma](docs/ekran-goruntuleri/08-karsilastirma.jpg) |
 |---|---|
 | Tüm analizler, riskli filtresi, önizleme, silme | İki numunenin görüntü, segmentasyon, hücre sayısı, kaplama, morfoloji ve güven farkları |
@@ -405,8 +432,9 @@ Kendiniz denemek isterseniz aşağıdaki dosyaları kullanabilirsiniz. Örnek ve
 |---|---|---|---|
 | **Tekli / toplu görüntü analizi** | `backend/ornek_veri/vitrin/*.jpg` (8 sınıf) | `python scripts/ornek_veri_uret.py` — sentetik faz-kontrast benzeri görüntüler | Herhangi bir JPG/PNG/TIFF mikroskop görüntüsü; toplu için bunları bir `.zip` yapın |
 | **Video / zaman serisi** | `backend/ornek_veri/takip/takip_demo.mp4` | `python scripts/ornek_takip_uret.py` — 24 kareli sentetik time-lapse | Kendi MP4/AVI mikroskop videonuz |
-| **CRISPR-Cas — tek genom** | `backend/ornek_veri/genom/ornek_bakteri.fasta` (gömülü 28 bp tekrar, ~18 aralayıcı) + `genom/referans/*.fasta` (skani için) | `python scripts/ornek_genom_uret.py` — sentetik | NCBI’den bir bakteri genomu (FASTA/GenBank), ör. `datasets download genome accession GCF_000005845.2` (E. coli K-12) |
-| **CRISPR-Cas — karşılaştırmalı** | `backend/ornek_veri/genom/faj/NC_07091{4,5,6,8}.gbk` (4 Yersinia faj) | pyGenomeViz örnek veri kümesi <https://github.com/moshi4/pygenomeviz-data-v1> (NCBI RefSeq, kamuya açık) | 2–8 adet FASTA **veya** GenBank genom dosyasını birlikte yükleyin |
+| **CRISPR-Cas — sentetik genom** | `backend/ornek_veri/genom/ornek_bakteri.fasta` (gömülü 28 bp tekrar, ~18 aralayıcı) + `genom/referans/*.fasta` (skani için) | `python scripts/ornek_genom_uret.py` — sentetik | NCBI’den bir bakteri genomu (FASTA/GenBank) |
+| **CRISPR-Cas — gerçek bakteri genomu** (doğrusal etiketli + dairesel GC) | `backend/ornek_veri/genom/bakteri/GCF_000023685.1.gbff` (~1.1 Mb, ~900 gen, _Mycoplasma mycoides_) | pyGenomeViz `mycoplasma_mycoides` örnek kümesi (NCBI RefSeq, kamuya açık) | Herhangi bir açıklamalı `.gbk`/`.gbff` bakteri genomu |
+| **CRISPR-Cas — karşılaştırmalı sinteni** | `backend/ornek_veri/genom/faj/NC_07091{4,5,6,8}.gbk` (4 Yersinia faj) | pyGenomeViz örnek veri kümesi <https://github.com/moshi4/pygenomeviz-data-v1> (NCBI RefSeq, kamuya açık) | 2–8 adet FASTA **veya** GenBank genom dosyasını birlikte yükleyin |
 | **Hücre takibi** | `backend/ornek_veri/takip/takip_demo_kareler.zip` (24 kare) | `python scripts/ornek_takip_uret.py` | Kare görüntülerini içeren `.zip`, çok sayfalı `.tif` yığını veya MP4/AVI |
 
 **Gerçek genom verisi indirmek için** (NCBI Datasets CLI):
@@ -422,8 +450,14 @@ pyGenomeViz’in tüm örnek veri kümeleri Python’dan da alınabilir:
 
 ```python
 from pygenomeviz.utils import load_example_genbank_dataset
-files = load_example_genbank_dataset("enterobacteria_phage")  # ya da "yersinia_phage", "escherichia_coli", "saccharomyces" ...
+# acinetobacter_phage · yersinia_phage · enterobacteria_phage ·
+# mycoplasma_mycoides · escherichia_coli · saccharomyces
+files = load_example_genbank_dataset("enterobacteria_phage")
 ```
+
+pyGenomeViz / pyCirclize kaynakları:
+- pyGenomeViz — <https://github.com/moshi4/pyGenomeViz> · dok: <https://moshi4.github.io/pyGenomeViz/>
+- pyCirclize — <https://github.com/moshi4/pyCirclize> · dok: <https://moshi4.github.io/pycirclize/>
 
 `docs/demo-senaryosu.md` her akış için adım adım beklenen çıktıyı listeler.
 

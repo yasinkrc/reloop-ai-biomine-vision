@@ -87,14 +87,33 @@ def test_coklu_genom_karsilastirma(tmp_path):
     y2 = tmp_path / "crispr2.fasta"
     y2.write_text(">test_kontig2\n" + "".join(ch) + "\n")
 
-    d = G.genom_analiz([y1, y2], dosya_adi="2 genom")
+    d = G.genom_analiz([y1, y2], dosya_adi="2 genom",
+                       secenekler={"tip": "karsilastirmali", "gen_stili": "box",
+                                   "link_renk": "turuncu-yesil", "min_kimlik": 40})
     assert d["genom_sayisi"] == 2
     assert d["karsilastirmali"] is True
     assert len(d["genomlar"]) == 2
     assert d["genom_haritasi"], "karşılaştırma haritası üretilmedi"
+    assert d["secenekler"]["gen_stili"] == "box"
+    assert d["secenekler"]["link_renk"] == "turuncu-yesil"
     # mmseqs kuruluysa sinteni bağlantıları olmalı
     if G._arac_var("mmseqs"):
         assert d["hizalama_sayisi"] >= 1
+
+
+def test_tekli_harita_tipleri(tmp_path):
+    """tip='hepsi' -> tekli doğrusal + dairesel (pyCirclize) haritalar."""
+    y = _crispr_fasta(tmp_path, aralayici=14)
+    d = G.genom_analiz(y, secenekler={"tip": "hepsi", "etiket": "tumu"})
+    assert d["harita_tipi"] == "hepsi"
+    assert d["dogrusal_harita"], "tekli doğrusal harita üretilmedi"
+    try:
+        import pycirclize  # noqa: F401
+
+        assert len(d["dairesel_haritalar"]) == 1
+        assert d["dairesel_haritalar"][0]["png"].endswith(".png")
+    except ImportError:
+        pass
 
 
 def test_ornek_genom_varsa_calisir():

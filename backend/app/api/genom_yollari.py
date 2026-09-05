@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.config import ayarlari_al
 from app.core import genom as genom_mod
@@ -16,6 +16,15 @@ log = log_al(__name__)
 _ORNEK_DIZIN = Path(__file__).resolve().parent.parent.parent / "ornek_veri" / "genom"
 
 
+def _secenekler(
+    tip: str, gen_stili: str, etiket: str, link_renk: str, min_kimlik: int
+) -> dict:
+    return {
+        "tip": tip, "gen_stili": gen_stili, "etiket": etiket,
+        "link_renk": link_renk, "min_kimlik": min_kimlik,
+    }
+
+
 @router.get("/durum")
 def durum():
     return {
@@ -23,13 +32,31 @@ def durum():
         "skani": genom_mod._arac_var("skani"),
         "prodigal": genom_mod._arac_var("prodigal"),
         "mmseqs": genom_mod._arac_var("mmseqs"),
+        "mummer": genom_mod._arac_var("nucmer"),
+        "pycirclize": _pycirclize_var(),
         "referans_genom_sayisi": len(list((_ORNEK_DIZIN / "referans").glob("*.f*a")))
         if (_ORNEK_DIZIN / "referans").is_dir() else 0,
     }
 
 
+def _pycirclize_var() -> bool:
+    try:
+        import pycirclize  # noqa: F401
+
+        return True
+    except Exception:
+        return False
+
+
 @router.post("/analiz")
-async def genom_analiz_yukle(dosyalar: list[UploadFile] = File(...)):
+async def genom_analiz_yukle(
+    dosyalar: list[UploadFile] = File(...),
+    tip: str = Form("otomatik"),
+    gen_stili: str = Form("bigarrow"),
+    etiket: str = Form("ust"),
+    link_renk: str = Form("gri-kirmizi"),
+    min_kimlik: int = Form(30),
+):
     if not dosyalar:
         raise HTTPException(400, "En az bir genom dosyası yükleyin.")
     if len(dosyalar) > 8:
@@ -52,7 +79,10 @@ async def genom_analiz_yukle(dosyalar: list[UploadFile] = File(...)):
         yollar.append(yukleme_kaydet(icerik, ad, ayar.yukleme_dizini / "genom"))
 
     try:
-        return genom_mod.genom_analiz(yollar)
+        return genom_mod.genom_analiz(
+            yollar,
+            secenekler=_secenekler(tip, gen_stili, etiket, link_renk, min_kimlik),
+        )
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception:
@@ -65,20 +95,35 @@ async def genom_analiz_yukle(dosyalar: list[UploadFile] = File(...)):
 
 
 @router.post("/ornek")
-def genom_ornek():
-    """Paketle gelen 4 Yersinia faj genomunu karşılaştırmalı analiz eder
-    (pyGenomeViz sinteni figürü — repo örneğinin aynısı)."""
+def genom_ornek(
+    tip: str = Form("hepsi"),
+    gen_stili: str = Form("bigarrow"),
+    etiket: str = Form("ust"),
+    link_renk: str = Form("gri-kirmizi"),
+    min_kimlik: int = Form(30),
+):
+    """Paketle gelen 4 Yersinia faj genomunu analiz eder — karşılaştırmalı
+    doğrusal sinteni + tekli doğrusal + dairesel (Circos) haritalar."""
     faj = sorted((_ORNEK_DIZIN / "faj").glob("*.gb*"))
     if len(faj) < 2:
         raise HTTPException(
             404,
             "Örnek faj genomları bulunamadı. `python scripts/ornek_genom_uret.py` çalıştırın.",
         )
-    return genom_mod.genom_analiz(list(faj), dosya_adi="Örnek: 4 Yersinia faj karşılaştırması")
+    return genom_mod.genom_analiz(
+        list(faj), dosya_adi="Örnek: 4 Yersinia faj",
+        secenekler=_secenekler(tip, gen_stili, etiket, link_renk, min_kimlik),
+    )
 
 
 @router.post("/ornek-crispr")
-def genom_ornek_crispr():
+def genom_ornek_crispr(
+    tip: str = Form("hepsi"),
+    gen_stili: str = Form("arrow"),
+    etiket: str = Form("tumu"),
+    link_renk: str = Form("gri-kirmizi"),
+    min_kimlik: int = Form(30),
+):
     """Paketle gelen sentetik, gömülü CRISPR dizili tek genomu analiz eder."""
     adaylar = sorted(
         p for p in _ORNEK_DIZIN.glob("*")
@@ -89,4 +134,30 @@ def genom_ornek_crispr():
             404,
             "Örnek CRISPR genomu bulunamadı. `python scripts/ornek_genom_uret.py` çalıştırın.",
         )
-    return genom_mod.genom_analiz(adaylar[0], dosya_adi=f"Örnek: {adaylar[0].name}")
+    return genom_mod.genom_analiz(
+        adaylar[0], dosya_adi=f"Örnek: {adaylar[0].name}",
+        secenekler=_secenekler(tip, gen_stili, etiket, link_renk, min_kimlik),
+    )
+
+
+@router.post("/ornek-bakteri")
+def genom_ornek_bakteri(
+    tip: str = Form("hepsi"),
+    gen_stili: str = Form("arrow"),
+    etiket: str = Form("ust"),
+    link_renk: str = Form("gri-kirmizi"),
+    min_kimlik: int = Form(30),
+):
+    """Paketle gelen gerçek, açıklamalı bakteri genomu (GenBank) —
+    gen adı etiketli doğrusal + GC halkalı dairesel harita."""
+    bakteri = sorted((_ORNEK_DIZIN / "bakteri").glob("*.gb*"))
+    if not bakteri:
+        raise HTTPException(
+            404,
+            "Örnek bakteri genomu yok. `python scripts/ornek_genom_uret.py` çalıştırın "
+            "(internet gerekir).",
+        )
+    return genom_mod.genom_analiz(
+        bakteri[0], dosya_adi=f"Örnek: {bakteri[0].stem}",
+        secenekler=_secenekler(tip, gen_stili, etiket, link_renk, min_kimlik),
+    )

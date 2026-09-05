@@ -3,11 +3,22 @@ import type {
   AyarKaydi,
   GecmisKaydi,
   GenomSonuc,
+  GorsellestirmeAyari,
   Saglik,
   TakipSonuc,
   TopluSonuc,
   VideoSonuc,
 } from "./tipler";
+
+function _ayarForm(a: GorsellestirmeAyari): FormData {
+  const f = new FormData();
+  f.append("tip", a.tip);
+  f.append("gen_stili", a.gen_stili);
+  f.append("etiket", a.etiket);
+  f.append("link_renk", a.link_renk);
+  f.append("min_kimlik", String(a.min_kimlik));
+  return f;
+}
 
 // Tarayıcıda göreli yollar (next.config.js rewrites üzerinden backend'e proxy'lenir).
 const TABAN = process.env.NEXT_PUBLIC_API_TABAN ?? "";
@@ -84,15 +95,26 @@ export const api = {
   // --- CRISPR-Cas / genom ---
   genomAnaliz: (form: FormData) =>
     istek<GenomSonuc>("/api/genom/analiz", { method: "POST", body: form }),
-  genomOrnek: () => istek<GenomSonuc>("/api/genom/ornek", { method: "POST" }),
-  genomOrnekCrispr: () =>
-    istek<GenomSonuc>("/api/genom/ornek-crispr", { method: "POST" }),
+  genomOrnek: (ayar: GorsellestirmeAyari) =>
+    istek<GenomSonuc>("/api/genom/ornek", { method: "POST", body: _ayarForm(ayar) }),
+  genomOrnekCrispr: (ayar: GorsellestirmeAyari) =>
+    istek<GenomSonuc>("/api/genom/ornek-crispr", {
+      method: "POST",
+      body: _ayarForm(ayar),
+    }),
+  genomOrnekBakteri: (ayar: GorsellestirmeAyari) =>
+    istek<GenomSonuc>("/api/genom/ornek-bakteri", {
+      method: "POST",
+      body: _ayarForm(ayar),
+    }),
   genomDurum: () =>
     istek<{
       cctyper: boolean;
       skani: boolean;
       prodigal: boolean;
       mmseqs: boolean;
+      mummer: boolean;
+      pycirclize: boolean;
       referans_genom_sayisi: number;
     }>("/api/genom/durum"),
 

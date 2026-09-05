@@ -102,12 +102,38 @@ def _faj_ornekleri_indir() -> None:
               f"Karşılaştırmalı örnek çalışmayabilir; internet gerektirir.")
 
 
+def _bakteri_ornegi_indir() -> None:
+    """Gerçek, açıklamalı küçük bir bakteri genomunu (Mycoplasma mycoides,
+    ~1.1 Mb, ~900 gen) bakteri/ altına kopyalar. Dairesel Circos haritası ve
+    gen adı etiketli doğrusal harita demosu için.
+
+    Kaynak: pyGenomeViz örnek veri kümesi (NCBI RefSeq, kamuya açık).
+    """
+    hedef = CIKTI / "bakteri"
+    hedef.mkdir(parents=True, exist_ok=True)
+    if list(hedef.glob("*.gb*")):
+        print(f"Bakteri örneği zaten var: {hedef}")
+        return
+    try:
+        from pygenomeviz.utils import load_example_genbank_dataset
+        import shutil
+
+        dosyalar = load_example_genbank_dataset("mycoplasma_mycoides")
+        f = min(dosyalar, key=lambda p: p.stat().st_size)
+        shutil.copy(f, hedef / f.name)
+        print(f"Bakteri örneği: {hedef / f.name} (~2.7 MB GenBank)")
+    except Exception as e:
+        print(f"!! Bakteri örneği indirilemedi ({e}). "
+              f"'/ornek-bakteri' çalışmayabilir; internet gerektirir.")
+
+
 def main() -> None:
     rng = random.Random(2026)
     genom = genom_kur(rng)
     yaz_fasta(CIKTI / "ornek_bakteri.fasta",
               "ornek_bakteri_kontig1 sentetik CRISPR demo genomu", genom)
     _faj_ornekleri_indir()
+    _bakteri_ornegi_indir()
 
     # skani referansları
     yaz_fasta(REF / "Pseudomonas_biomine_A.fasta", "ref_A yakin", mutasyona_ugrat(genom, 0.008, rng))

@@ -34,6 +34,9 @@ backend/ornek_veri/*.png
 !backend/ornek_veri/genom/referans/*.fasta
 !backend/ornek_veri/genom/faj/
 !backend/ornek_veri/genom/faj/*.gbk
+!backend/ornek_veri/genom/bakteri/
+!backend/ornek_veri/genom/bakteri/*.gbff
+!backend/ornek_veri/genom/bakteri/*.gbk
 # Örnek zaman serisi (kare JPEG'leri + mp4 + zip):
 !backend/ornek_veri/takip/
 !backend/ornek_veri/takip/kare_*.jpg

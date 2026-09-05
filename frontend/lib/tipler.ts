@@ -173,8 +173,28 @@ export interface GenomSonuc {
   genom_sayisi: number;
   karsilastirmali: boolean;
   hizalama_sayisi: number;
+  hizalama_yontemi: string;
   karsilastirma_html: string | null;
   genomlar: GenomOzet[];
+  // Harita tipleri
+  dogrusal_harita: string | null;
+  dairesel_haritalar: { ad: string; png: string }[];
+  harita_tipi: string;
+  secenekler: {
+    tip: string;
+    gen_stili: string;
+    etiket: string;
+    link_renk: string;
+    min_kimlik: number;
+  };
+}
+
+export interface GorsellestirmeAyari {
+  tip: string;
+  gen_stili: string;
+  etiket: string;
+  link_renk: string;
+  min_kimlik: number;
 }
 
 export interface GenomOzet {

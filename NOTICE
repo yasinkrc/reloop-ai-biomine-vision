@@ -71,10 +71,14 @@ paketteki sentetik örnek veriyle eğitir (scripts/model_egit.py).
 - pyGenomeViz — https://github.com/moshi4/pyGenomeViz
   Lisans: MIT. Genom / CRISPR lokus haritaları ve çoklu-genom karşılaştırmalı
   sinteni figürleri için kütüphane olarak kullanılır.
-  Örnek veri: `backend/ornek_veri/genom/faj/NC_07091{4,5,6,8}.gbk` dosyaları
-  pyGenomeViz'in Yersinia faj örnek veri kümesinden alınmıştır
+  Örnek veri: `backend/ornek_veri/genom/faj/NC_07091{4,5,6,8}.gbk` (Yersinia faj)
+  ve `backend/ornek_veri/genom/bakteri/GCF_000023685.1.gbff` (Mycoplasma mycoides)
+  dosyaları pyGenomeViz örnek veri kümelerinden alınmıştır
   (https://github.com/moshi4/pygenomeviz-data-v1); kaynağı NCBI RefSeq'tir ve
   kamuya açıktır.
+- pyCirclize — https://github.com/moshi4/pyCirclize
+  Lisans: MIT. Dairesel (Circos tarzı) genom haritaları için kütüphane olarak
+  kullanılır (CDS halkaları, GC içeriği, GC eğriliği).
 - MMseqs2 — https://github.com/soedinglab/MMseqs2 · Lisans: GPLv3.
   Opsiyonel; GenBank girdilerde karşılaştırmalı sinteni (protein RBH) için CLI
   olarak çağrılır.

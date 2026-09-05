@@ -123,12 +123,12 @@ class GenomSonucu:
 # --------------------------------------------------------------------------- #
 # Dizi okuma
 # --------------------------------------------------------------------------- #
-DESTEKLENEN = {".fasta", ".fa", ".fna", ".ffn", ".gb", ".gbk", ".genbank", ".gff", ".gff3"}
+DESTEKLENEN = {".fasta", ".fa", ".fna", ".ffn", ".gb", ".gbk", ".gbff", ".genbank", ".gff", ".gff3"}
 
 
 def _bicim(yol: Path) -> str:
     u = yol.suffix.lower()
-    if u in {".gb", ".gbk", ".genbank"}:
+    if u in {".gb", ".gbk", ".gbff", ".genbank"}:
         return "genbank"
     if u in {".gff", ".gff3"}:
         return "gff"
@@ -504,69 +504,115 @@ def _hizalamalar(yollar: list[Path]) -> tuple[list, str]:
     return [], "yok"
 
 
+@dataclass
+class HaritaSecenekleri:
+    """pyGenomeViz / pyCirclize görselleştirme seçenekleri (arayüzden gelir)."""
+
+    tip: str = "otomatik"          # otomatik | karsilastirmali | tekli | dairesel | hepsi
+    gen_stili: str = "bigarrow"    # arrow | bigarrow | box | bigbox | rbox | bigrbox
+    etiket: str = "ust"            # yok | ust (yalnız üst track) | tumu
+    link_renk: str = "gri-kirmizi"  # gri-kirmizi | turuncu-yesil | mavi-kirmizi
+    min_kimlik: int = 30          # sinteni bağlantısı için alt kimlik eşiği (%)
+    egri_link: bool = True
+    ozellik_tipleri: tuple[str, ...] = ("CDS",)  # CDS | gene | tRNA | rRNA
+
+    _LINK_PALET = {
+        "gri-kirmizi": ("#bdbdbd", "#e33d3d", ["#f2f2f2", "#b3121a"]),
+        "turuncu-yesil": ("#e08b3a", "#3a9d5c", ["#fdf1e3", "#2e7d47"]),
+        "mavi-kirmizi": ("#7fb3d5", "#e33d3d", ["#eef4fb", "#c0392b"]),
+    }
+
+    def palet(self):
+        return self._LINK_PALET.get(self.link_renk, self._LINK_PALET["gri-kirmizi"])
+
+    @staticmethod
+    def coz(veri: dict | None) -> "HaritaSecenekleri":
+        veri = veri or {}
+        gecerli_stil = {"arrow", "bigarrow", "box", "bigbox", "rbox", "bigrbox"}
+        gecerli_etiket = {"yok", "ust", "tumu"}
+        s = HaritaSecenekleri()
+        if str(veri.get("gen_stili")) in gecerli_stil:
+            s.gen_stili = veri["gen_stili"]
+        if str(veri.get("etiket")) in gecerli_etiket:
+            s.etiket = veri["etiket"]
+        if str(veri.get("link_renk")) in HaritaSecenekleri._LINK_PALET:
+            s.link_renk = veri["link_renk"]
+        if veri.get("tip") in {"karsilastirmali", "tekli", "dairesel", "hepsi", "otomatik"}:
+            s.tip = veri["tip"]
+        try:
+            s.min_kimlik = max(0, min(100, int(veri.get("min_kimlik", 30))))
+        except (TypeError, ValueError):
+            pass
+        s.egri_link = bool(veri.get("egri_link", True))
+        tipler = veri.get("ozellik_tipleri")
+        if isinstance(tipler, (list, tuple)) and tipler:
+            s.ozellik_tipleri = tuple(t for t in tipler if t in {"CDS", "gene", "tRNA", "rRNA"}) or ("CDS",)
+        return s
+
+
 def karsilastirmali_harita(
-    genomlar: list[GenomKaydi], hizalamalar: list, cikti_dizini: Path
+    genomlar: list[GenomKaydi], hizalamalar: list, cikti_dizini: Path,
+    sec: HaritaSecenekleri | None = None,
 ) -> tuple[Path | None, Path | None]:
     """pyGenomeViz ile çoklu-genom karşılaştırma figürü.
 
-    Repo örneklerindeki gibi: her genom bir parça (track), turuncu gen okları,
-    genomlar arası kimliğe göre renklendirilmiş sinteni bağlantıları, CRISPR
-    dizileri ve Cas genleri işaretli. (PNG + HTML)
+    Her genom bir parça (track); gen okları (seçilen stil), genomlar arası
+    kimliğe göre renklendirilmiş sinteni bağlantıları, CRISPR dizileri ve Cas
+    genleri işaretli. Ölçek çubuğu + colorbar + etkileşimli HTML.
     """
     import matplotlib
 
     matplotlib.use("Agg")
     from pygenomeviz import GenomeViz
 
+    sec = sec or HaritaSecenekleri()
     tekli = len(genomlar) == 1
+    ic_renk, ters_renk, bar_renk = sec.palet()
     gv = GenomeViz(
         fig_track_height=0.6 if not tekli else 0.9,
         feature_track_ratio=0.5,
         show_axis=True,
     )
-    for g in genomlar:
+    for i, g in enumerate(genomlar):
         boy = {sid: len(s) for sid, s in g.kontigler}
         trk = gv.add_feature_track(g.ad[:26], boy)
-        # gen okları
+        etiket_goster = sec.etiket == "tumu" or (sec.etiket == "ust" and i == 0)
         for sid, b, e, yon, etiket in g.genler:
             uzun = boy.get(sid, e)
             try:
                 trk.add_feature(max(int(b), 1), min(int(e), uzun), yon,
-                                plotstyle="bigarrow", fc="#f0a020", ec="#c67c11",
-                                lw=0.2, label=etiket if tekli and etiket else "")
+                                plotstyle=sec.gen_stili, fc="#f0a020", ec="#c67c11",
+                                lw=0.2, label=etiket if (etiket_goster and etiket) else "")
             except Exception:
                 continue
-        # CRISPR dizileri
         for c in g.crispr:
             uzun = boy.get(c.kontig) or c.bitis
             trk.add_feature(max(int(c.baslangic), 1), min(int(c.bitis), uzun), 1,
                             plotstyle="bigbox", fc="#0891b2", ec="#0e7490", lw=0.7,
-                            label=f"CRISPR·{c.aralayici_sayisi}" if tekli else "")
-        # Cas gen adayları
+                            label=f"CRISPR·{c.aralayici_sayisi}" if etiket_goster else "")
         for cg in g.cas:
             uzun = boy.get(cg.kontig) or cg.bitis
             trk.add_feature(max(int(cg.baslangic), 1), min(int(cg.bitis), uzun),
                             1 if cg.yon == "+" else -1, plotstyle="bigarrow",
                             fc="#dc2626", ec="#991b1b", lw=0.3,
-                            label=cg.ad if tekli and cg.ad != "aday_cas" else "")
+                            label=cg.ad if (etiket_goster and cg.ad != "aday_cas") else "")
 
-    # Sinteni bağlantıları (kimliğe göre gri→kırmızı; ters yönlüler kırmızı)
     baglanti = 0
     for c in hizalamalar:
         try:
             q = getattr(c, "query_link", None)
             r = getattr(c, "ref_link", None)
-            if not q or not r:
+            kimlik = float(getattr(c, "identity", 100.0))
+            if not q or not r or kimlik < sec.min_kimlik:
                 continue
-            gv.add_link(q, r, v=float(getattr(c, "identity", 100.0)),
-                        vmin=30, vmax=100, curve=True,
-                        color="#bdbdbd", inverted_color="#e33d3d")
+            gv.add_link(q, r, v=kimlik, vmin=sec.min_kimlik, vmax=100,
+                        curve=sec.egri_link, color=ic_renk, inverted_color=ters_renk)
             baglanti += 1
         except Exception:
             continue
     if baglanti:
         try:
-            gv.set_colorbar(["#f2f2f2", "#b3121a"], vmin=30, vmax=100,
+            gv.set_colorbar(bar_renk, vmin=sec.min_kimlik, vmax=100,
                             bar_label="Kimlik %", bar_labelsize=10, tick_labelsize=8,
                             bar_left=1.03)
         except Exception:
@@ -591,6 +637,147 @@ def karsilastirmali_harita(
         log.info("pyGenomeViz HTML üretilemedi: %s", e)
         html = None
     return png, html
+
+
+def tekli_dogrusal_harita(
+    genom: GenomKaydi, cikti_dizini: Path, sec: HaritaSecenekleri | None = None
+) -> Path | None:
+    """Tek genom için doğrusal pyGenomeViz haritası — gen adı etiketleri,
+    çok-kontiglı (draft) genom desteği, seçilebilir ok stili."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from pygenomeviz import GenomeViz
+
+    sec = sec or HaritaSecenekleri()
+    boy = {sid: len(s) for sid, s in genom.kontigler}
+    gv = GenomeViz(fig_track_height=0.9, feature_track_ratio=0.7, show_axis=True)
+    trk = gv.add_feature_track(genom.ad[:26], boy)
+    etiket_ver = sec.etiket != "yok"
+    for sid, b, e, yon, etiket in genom.genler:
+        uzun = boy.get(sid, e)
+        try:
+            trk.add_feature(max(int(b), 1), min(int(e), uzun), yon,
+                            plotstyle=sec.gen_stili, fc="#5aa0e0", ec="#2b6f9e",
+                            lw=0.3, label=etiket if (etiket_ver and etiket) else "")
+        except Exception:
+            continue
+    for c in genom.crispr:
+        uzun = boy.get(c.kontig) or c.bitis
+        trk.add_feature(max(int(c.baslangic), 1), min(int(c.bitis), uzun), 1,
+                        plotstyle="bigbox", fc="#0891b2", ec="#0e7490", lw=0.7,
+                        label=f"CRISPR ({c.aralayici_sayisi} aralayıcı)")
+    for cg in genom.cas:
+        uzun = boy.get(cg.kontig) or cg.bitis
+        trk.add_feature(max(int(cg.baslangic), 1), min(int(cg.bitis), uzun),
+                        1 if cg.yon == "+" else -1, plotstyle="bigarrow",
+                        fc="#dc2626", ec="#991b1b", lw=0.3,
+                        label=cg.ad if cg.ad != "aday_cas" else "")
+    try:
+        gv.set_scale_bar()
+    except Exception:
+        pass
+    fig = gv.plotfig()
+    png = cikti_dizini / f"genom_dogrusal_{benzersiz_ad('.png')}"
+    fig.savefig(png, dpi=150, bbox_inches="tight")
+    import matplotlib.pyplot as plt
+
+    plt.close(fig)
+    return png
+
+
+def dairesel_harita(genom: GenomKaydi, cikti_dizini: Path) -> Path | None:
+    """pyCirclize ile dairesel (Circos tarzı) genom haritası:
+    ileri/geri CDS halkaları, GC içeriği, GC eğriliği, CRISPR lokusları."""
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import numpy as np
+        from pycirclize import Circos
+        from pycirclize.parser import Genbank as CircGenbank
+    except Exception as e:  # pragma: no cover
+        log.info("pyCirclize yok, dairesel harita atlandı: %s", e)
+        return None
+
+    # GenBank ise doğrudan; değilse geçici GenBank benzeri kayıt gerekmez —
+    # pyCirclize FASTA'dan CDS çıkaramaz, bu yüzden genler listemizi kullanırız.
+    kontig = max(genom.kontigler, key=lambda kv: len(kv[1]))
+    sid, dizi = kontig
+    boy = len(dizi)
+
+    circos = Circos(sectors={genom.ad[:24]: boy})
+    sektor = circos.sectors[0]
+
+    dis = sektor.add_track((99, 100))
+    dis.axis(fc="#cfcfcf")
+    aralik = max(boy // 10, 1000)
+    dis.xticks_by_interval(
+        aralik, label_size=7, show_endlabel=False,
+        label_formatter=lambda v: f"{v/1000:.0f} kb" if boy < 2_000_000 else f"{v/1e6:.1f} Mb",
+    )
+
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+
+    ileri = [SeqFeature(FeatureLocation(b - 1, e, strand=1))
+             for (ks, b, e, y, _l) in genom.genler if ks == sid and y == 1]
+    geri = [SeqFeature(FeatureLocation(b - 1, e, strand=-1))
+            for (ks, b, e, y, _l) in genom.genler if ks == sid and y == -1]
+
+    ft_f = sektor.add_track((91, 98))
+    ft_f.axis(fc="none", ec="none")
+    if ileri:
+        ft_f.genomic_features(ileri, plotstyle="arrow", fc="#f0705a", lw=0.1)
+    ft_r = sektor.add_track((83, 90))
+    ft_r.axis(fc="none", ec="none")
+    if geri:
+        ft_r.genomic_features(geri, plotstyle="arrow", fc="#5aa0e0", lw=0.1)
+
+    # CRISPR lokusları — kırmızı dikdörtgenler
+    if genom.crispr:
+        crt = sektor.add_track((79, 83))
+        crt.axis(fc="none", ec="none")
+        for c in genom.crispr:
+            if c.kontig != sid:
+                continue
+            try:
+                crt.rect(max(c.baslangic, 1), min(c.bitis, boy), fc="#0891b2", ec="#0e7490")
+            except Exception:
+                pass
+
+    # GC içeriği
+    try:
+        cg = CircGenbank(genom.yol) if _bicim(genom.yol) == "genbank" else None
+    except Exception:
+        cg = None
+    if cg is not None:
+        try:
+            pos, gc = map(np.array, cg.calc_gc_content())
+            gcm = cg.calc_genome_gc_content()
+            lo, hi = float(gc.min()), float(gc.max())
+            t1 = sektor.add_track((58, 78)); t1.axis(fc="none")
+            t1.fill_between(pos, np.where(gc >= gcm, gc, gcm), gcm, vmin=lo, vmax=hi,
+                            fc="#2b8f2b", alpha=.75)
+            t1.fill_between(pos, np.where(gc < gcm, gc, gcm), gcm, vmin=lo, vmax=hi,
+                            fc="#8f8f2b", alpha=.75)
+            pos2, sk = map(np.array, cg.calc_gc_skew())
+            m = float(np.abs(sk).max()) or 1e-6
+            t2 = sektor.add_track((38, 58)); t2.axis(fc="none")
+            t2.fill_between(pos2, np.where(sk >= 0, sk, 0), 0, vmin=-m, vmax=m,
+                            fc="#2b6f8f", alpha=.75)
+            t2.fill_between(pos2, np.where(sk < 0, sk, 0), 0, vmin=-m, vmax=m,
+                            fc="#8f2b6f", alpha=.75)
+        except Exception as e:  # pragma: no cover
+            log.info("GC halkaları çizilemedi: %s", e)
+
+    circos.text(f"{genom.ad}\n{boy:,} bp", size=10)
+    fig = circos.plotfig()
+    png = cikti_dizini / f"genom_dairesel_{benzersiz_ad('.png')}"
+    fig.savefig(png, dpi=140, bbox_inches="tight")
+    import matplotlib.pyplot as plt
+
+    plt.close(fig)
+    return png
 
 
 def _lokus_ciz(dizi: CrisprDizisi, cikti_dizini: Path) -> Path:
@@ -860,12 +1047,15 @@ def _tek_genom_coz(
     return kayit, tip, yontem_crispr
 
 
-def genom_analiz(yol, *, dosya_adi: str | None = None) -> dict:
+def genom_analiz(yol, *, dosya_adi: str | None = None, secenekler: dict | None = None) -> dict:
     """Tek veya çoklu genom analizi.
 
-    `yol` tek bir dosya yolu ya da dosya yolları listesi olabilir. Birden çok
-    genom verilirse pyGenomeViz ile karşılaştırmalı sinteni figürü üretilir.
+    `yol` tek bir dosya yolu ya da dosya yolları listesi olabilir. `secenekler`
+    görselleştirme ayarlarıdır (bkz. `HaritaSecenekleri`): harita tipi
+    (karsilastirmali / tekli / dairesel / hepsi), gen oku stili, etiket, sinteni
+    bağlantı rengi ve alt kimlik eşiği.
     """
+    sec = HaritaSecenekleri.coz(secenekler)
     ayar = ayarlari_al()
     cikti = ayar.cikti_dizini
     cikti.mkdir(parents=True, exist_ok=True)
@@ -927,18 +1117,51 @@ def genom_analiz(yol, *, dosya_adi: str | None = None) -> dict:
 
     crispr = sonuc.diziler
 
-    # --- Karşılaştırmalı / tekli genom haritası (pyGenomeViz) ---
+    # --- Haritalar (pyGenomeViz doğrusal + pyCirclize dairesel) ---
+    # tip=otomatik: çoklu -> karşılaştırmalı, tekli -> hem doğrusal hem dairesel
+    tip = sec.tip
+    if tip == "otomatik":
+        tip = "karsilastirmali" if coklu else "hepsi"
+
     hizalamalar, hiz_yontem = (
-        _hizalamalar([k.yol for k in genom_kayitlari]) if coklu else ([], "yok")
+        _hizalamalar([k.yol for k in genom_kayitlari])
+        if coklu and tip in {"karsilastirmali", "hepsi"} else ([], "yok")
     )
     harita_html = None
-    try:
-        png, harita_html = karsilastirmali_harita(genom_kayitlari, hizalamalar, cikti)
-        if png:
-            sonuc.genom_haritasi = _rel(png, ayar.veri_dizini)
-    except Exception as e:
-        log.warning("Genom haritası çizilemedi: %s", e)
-        uyarilar.append("Genom haritası oluşturulamadı.")
+    dogrusal_tekli = None
+    dairesel_liste: list[dict] = []
+
+    if tip in {"karsilastirmali", "hepsi"} and coklu:
+        try:
+            png, harita_html = karsilastirmali_harita(
+                genom_kayitlari, hizalamalar, cikti, sec)
+            if png:
+                sonuc.genom_haritasi = _rel(png, ayar.veri_dizini)
+        except Exception as e:
+            log.warning("Karşılaştırmalı harita çizilemedi: %s", e)
+            uyarilar.append("Karşılaştırmalı harita oluşturulamadı.")
+
+    if tip in {"tekli", "hepsi"} or (tip == "karsilastirmali" and not coklu):
+        try:
+            tp = tekli_dogrusal_harita(ilk, cikti, sec)
+            if tp:
+                dogrusal_tekli = _rel(tp, ayar.veri_dizini)
+                if not sonuc.genom_haritasi:
+                    sonuc.genom_haritasi = dogrusal_tekli
+        except Exception as e:
+            log.warning("Tekli doğrusal harita çizilemedi: %s", e)
+
+    if tip in {"dairesel", "hepsi"}:
+        for k in genom_kayitlari[:4]:
+            try:
+                dp = dairesel_harita(k, cikti)
+                if dp:
+                    dairesel_liste.append(
+                        {"ad": k.ad, "png": _rel(dp, ayar.veri_dizini)})
+            except Exception as e:
+                log.warning("Dairesel harita çizilemedi (%s): %s", k.ad, e)
+        if not sonuc.genom_haritasi and dairesel_liste:
+            sonuc.genom_haritasi = dairesel_liste[0]["png"]
 
     if crispr:
         try:
@@ -984,6 +1207,13 @@ def genom_analiz(yol, *, dosya_adi: str | None = None) -> dict:
     d["hizalama_sayisi"] = len(hizalamalar)
     d["hizalama_yontemi"] = hiz_yontem
     d["karsilastirma_html"] = _rel(harita_html, ayar.veri_dizini) if harita_html else None
+    d["dogrusal_harita"] = dogrusal_tekli
+    d["dairesel_haritalar"] = dairesel_liste
+    d["harita_tipi"] = tip
+    d["secenekler"] = {
+        "tip": sec.tip, "gen_stili": sec.gen_stili, "etiket": sec.etiket,
+        "link_renk": sec.link_renk, "min_kimlik": sec.min_kimlik,
+    }
     d["genomlar"] = [
         {
             "ad": k.ad,
